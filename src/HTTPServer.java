@@ -39,7 +39,7 @@ public class HTTPServer {
                 }
 
                 // generate an egg
-                String response = "Hello World HTTP!";
+                String response = "Hello World HTTP!.............................................................................................................................F";
                 PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(dataOutputStream, StandardCharsets.ISO_8859_1));
                 printWriter.print("HTTP/1.1 200 OK" + CRLF);
                 printWriter.print("Content-Type: text/html; charset=ISO-8859-1" + CRLF);

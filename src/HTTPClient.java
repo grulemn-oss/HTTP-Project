@@ -19,8 +19,13 @@ public class HTTPClient {
 
         System.out.println("client is requesting ... ");
         try {
+            // Read user input
             String host = args[0];
-            String inputFile = args[1];
+            String inputFile = "/index.html";
+            if (args.length > 1) {
+                inputFile = args[1];
+            }
+
 
             // build the connection
             Socket socket = new Socket(host, PORT);
@@ -29,30 +34,35 @@ public class HTTPClient {
 
 			// HINT: If the content length is not given in the HTTP respond's header,
 			// use while((N_bytes = reader.read(buffer, 0, CHUNK_SIZE)) != -1 ){} 
-            // generate an egg
+            // ------------OUTPUT-----------
             PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(dataOutputStream, StandardCharsets.ISO_8859_1));
-            if (inputFile == "") {
-                printWriter.print("GET /index.html HTTP/1.1" + CRLF);
-            } else {
-                printWriter.print("GET " + inputFile + " HTTP/1.1" + CRLF);
-            }
+            printWriter.print("GET " + inputFile + " HTTP/1.1" + CRLF);
             printWriter.print("HOST: " + host + CRLF);
             printWriter.print("CONNECTION: close" + CRLF);
             printWriter.print("Accept: */*" + EOH);
             printWriter.flush();
 
-            // read egg, shell by shell
+            // ------------INPUT---------------
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(dataInputStream));
             String line = bufferedReader.readLine();
+            int length = 0;
             while(!line.isEmpty()){
                 System.out.println(line);
                 line = bufferedReader.readLine();
+                if (line.length() > 15) {
+                    if (line.substring(0, 15).equals("Content-Length:")) {
+                        length = Integer.parseInt(line.substring(16));
+                    }
+                }
             }
 
             // feed the egg
-            char[] buf = new char[100];
-            bufferedReader.read(buf, 0, 17);
-            System.out.println("Msg from server: " + new String(buf));
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("./resources/client_folder/" +inputFile));
+            char[] buf = new char[length];
+            bufferedReader.read(buf, 0, length);
+            bufferedWriter.write(new String(buf));
+            bufferedWriter.flush();
+            bufferedWriter.close();
 
 
         }catch (UnknownHostException e){
