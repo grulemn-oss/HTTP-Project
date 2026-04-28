@@ -52,7 +52,6 @@ public class HTTPServer {
                 }
                 // Still need to find a way to search the server_folder for files within subfolders
                 File file = new File(ROOT_DIR, path);
-                String body = new String(Files.readAllBytes(file.toPath()), ENCODING);
 
                 // ------------OUTPUT---------------
                 // generate an egg
@@ -60,18 +59,19 @@ public class HTTPServer {
                 PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(dataOutputStream, StandardCharsets.ISO_8859_1));
 
                 if (file.exists() && !file.isDirectory()) {
+                    String body = new String(Files.readAllBytes(file.toPath()), ENCODING);
+
                     printWriter.print("HTTP/1.1 200 OK" + CRLF);
                     printWriter.print("Content-Type: text/html" + CRLF);
                     printWriter.print("Content-Length: " + body.length() + CRLF);
                     printWriter.print("Accept: */*" + EOH);
                     printWriter.print(body);
                 } else {
+
                     printWriter.print("HTTP/1.1 404 Not Found" + CRLF);
-                    printWriter.print("Content-Type: text/html" + CRLF);
-                    printWriter.print("Content-Length: " + body.length() + CRLF);
-                    printWriter.print("Accept: */*" + EOH);
-                    printWriter.flush();
-                    printWriter.print(body);
+                    printWriter.print("Content-Length: 0" + CRLF);
+                    printWriter.print("Connection: close" + EOH);
+                    System.out.println("Error 404: The requested file '" + path + "' does not exist.");
                 }
                 printWriter.flush();
                 printWriter.close();
