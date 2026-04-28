@@ -44,20 +44,36 @@ public class HTTPServer {
                 }
 
                 // -------------BODY-----------------
+                if (path.equals("/") || path.isEmpty()) {
+                    path = "/index.html";
+                }
+                if (path.startsWith("/")) {
+                    path = path.substring(1);
+                }
                 // Still need to find a way to search the server_folder for files within subfolders
                 File file = new File(ROOT_DIR, path);
                 String body = new String(Files.readAllBytes(file.toPath()), ENCODING);
 
                 // ------------OUTPUT---------------
                 // generate an egg
-                PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(dataOutputStream, StandardCharsets.ISO_8859_1));
-                printWriter.print("HTTP/1.1 200 OK" + CRLF);
-                printWriter.print("Content-Type: text/html" + CRLF);
-                printWriter.print("Content-Length: " + body.length() + CRLF);
-                printWriter.print("Accept: */*" + EOH);
-                printWriter.flush();
-                printWriter.print(body);
 
+                PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(dataOutputStream, StandardCharsets.ISO_8859_1));
+
+                if (file.exists() && !file.isDirectory()) {
+                    printWriter.print("HTTP/1.1 200 OK" + CRLF);
+                    printWriter.print("Content-Type: text/html" + CRLF);
+                    printWriter.print("Content-Length: " + body.length() + CRLF);
+                    printWriter.print("Accept: */*" + EOH);
+                    printWriter.print(body);
+                } else {
+                    printWriter.print("HTTP/1.1 404 Not Found" + CRLF);
+                    printWriter.print("Content-Type: text/html" + CRLF);
+                    printWriter.print("Content-Length: " + body.length() + CRLF);
+                    printWriter.print("Accept: */*" + EOH);
+                    printWriter.flush();
+                    printWriter.print(body);
+                }
+                printWriter.flush();
                 printWriter.close();
                 bufferedReader.close();
                 socket.close();
