@@ -8,7 +8,6 @@ import java.util.Scanner;
 public class HTTPClient {
 
     public static final int PORT = 80;
-    public static final String SERVER_ADDR = "127.0.0.1" ; // "www.google.com";
     public static final String CRLF = "\r\n";
     public static final String EOH = CRLF + CRLF;
 	public static final Charset ENCODING = StandardCharsets.ISO_8859_1; // encoding to use for reading/writing data
@@ -20,8 +19,11 @@ public class HTTPClient {
 
         System.out.println("client is requesting ... ");
         try {
-            String inputFile = args[0];
-            Socket socket = new Socket(SERVER_ADDR, PORT);
+            String host = args[0];
+            String inputFile = args[1];
+
+            // build the connection
+            Socket socket = new Socket(host, PORT);
             DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
             DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
 
@@ -29,8 +31,12 @@ public class HTTPClient {
 			// use while((N_bytes = reader.read(buffer, 0, CHUNK_SIZE)) != -1 ){} 
             // generate an egg
             PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(dataOutputStream, StandardCharsets.ISO_8859_1));
-            printWriter.print("GET /pokemon.png HTTP/1.1" + CRLF);
-            printWriter.print("HOST: " + SERVER_ADDR + CRLF);
+            if (inputFile == "") {
+                printWriter.print("GET /index.html HTTP/1.1" + CRLF);
+            } else {
+                printWriter.print("GET " + inputFile + " HTTP/1.1" + CRLF);
+            }
+            printWriter.print("HOST: " + host + CRLF);
             printWriter.print("CONNECTION: close" + CRLF);
             printWriter.print("Accept: */*" + EOH);
             printWriter.flush();
@@ -43,10 +49,10 @@ public class HTTPClient {
                 line = bufferedReader.readLine();
             }
 
-//            // feed the egg
-//            char[] buf = new char[100];
-//            bufferedReader.read(buf, 0, 17);
-//            System.out.println("Msg from server: " + new String(buf));
+            // feed the egg
+            char[] buf = new char[100];
+            bufferedReader.read(buf, 0, 17);
+            System.out.println("Msg from server: " + new String(buf));
 
 
         }catch (UnknownHostException e){
