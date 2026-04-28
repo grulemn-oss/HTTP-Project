@@ -21,7 +21,7 @@ public class HTTPClient {
         try {
             // Read user input
             String host = args[0];
-            String inputFile = "/index.html";
+            String inputFile = "index.html";
             if (args.length > 1) {
                 inputFile = args[1];
             }
@@ -46,24 +46,29 @@ public class HTTPClient {
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(dataInputStream));
             String line = bufferedReader.readLine();
             int length = 0;
-            while(!line.isEmpty()){
-                System.out.println(line);
-                line = bufferedReader.readLine();
-                if (line.length() > 15) {
-                    if (line.substring(0, 15).equals("Content-Length:")) {
+            if (line.length() > 8 && line.startsWith("200", 9)) {
+                while(!line.isEmpty()) {
+                    line = bufferedReader.readLine();
+                    if (line.length() > 15 && line.startsWith("Content-Length:")) {
                         length = Integer.parseInt(line.substring(16));
                     }
                 }
+
+                // SAVE FILE
+                BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("./resources/client_folder/" + inputFile));
+                char[] buf = new char[length];
+                bufferedReader.read(buf, 0, length);
+                bufferedWriter.write(new String(buf));
+                System.out.println("Saved File: " + inputFile);
+                bufferedWriter.flush();
+            } else if (line.length() > 8) {
+                // PRINT ERROR
+                System.out.print("Error: ");
+                while(!line.isEmpty()) {
+                    System.out.println(line);
+                    line = bufferedReader.readLine();
+                }
             }
-
-            // feed the egg
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("./resources/client_folder/" +inputFile));
-            char[] buf = new char[length];
-            bufferedReader.read(buf, 0, length);
-            bufferedWriter.write(new String(buf));
-            bufferedWriter.flush();
-            bufferedWriter.close();
-
 
         }catch (UnknownHostException e){
             e.printStackTrace();
