@@ -4,6 +4,8 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 
 public class HTTPServer {
 
@@ -11,7 +13,8 @@ public class HTTPServer {
     public static final String IP = "127.0.0.1";
     public static final String CRLF = "\r\n";
     public static final String EOH = CRLF + CRLF;
-	public static final Charset ENCODING = StandardCharsets.ISO_8859_1; // encoding to use for reading/writing 
+	public static final Charset ENCODING = StandardCharsets.ISO_8859_1; // encoding to use for reading/writing
+    public static final File ROOT_DIR = new File("resources/server_folder");
 
     public static void main(String[] args){
 
@@ -27,39 +30,58 @@ public class HTTPServer {
                 DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
                 DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
 
-                // Hint: use
-				//	String body = new String(Files.readAllBytes(file.toPath()), ENCODING);
-				// to read a file and convert it into a string 
+                // ------------INPUT---------------
                 // read egg, shell by shell
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(dataInputStream));
+                String path = "";
                 String line = bufferedReader.readLine();
-                while(!line.isEmpty()){
+                while(!line.isEmpty()) {
+                    if (line.startsWith("GET ")) {
+                        path = line.split(" ")[1];
+                    }
                     System.out.println(line);
                     line = bufferedReader.readLine();
                 }
 
+                // -------------BODY-----------------
+                // Still need to find a way to search the server_folder for files within subfolders
+                File file = new File(ROOT_DIR, path);
+                String body = new String(Files.readAllBytes(file.toPath()), ENCODING);
+
+                // ------------OUTPUT---------------
                 // generate an egg
-                String response = "Hello World HTTP!.............................................................................................................................F";
                 PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(dataOutputStream, StandardCharsets.ISO_8859_1));
                 printWriter.print("HTTP/1.1 200 OK" + CRLF);
-                printWriter.print("Content-Type: text/html; charset=ISO-8859-1" + CRLF);
-                printWriter.print("Content-Length: " + response.length() + CRLF);
+                printWriter.print("Content-Type: text/html" + CRLF);
+                printWriter.print("Content-Length: " + body.length() + CRLF);
                 printWriter.print("Accept: */*" + EOH);
                 printWriter.flush();
-                printWriter.print(response);
+                printWriter.print(body);
 
                 printWriter.close();
                 bufferedReader.close();
                 socket.close();
             }
 
+        }catch (NoSuchFileException e){
+            // Somehow this needs to print the 404 not found from test 1
+            // (I put it in this catch block but that may not be the best way to handle it)
+//            PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(dataOutputStream, StandardCharsets.ISO_8859_1));
+//            printWriter.print("HTTP/1.1 404 Not Found" + CRLF);
+//            printWriter.print("Content-Type: text/html" + CRLF);
+//            printWriter.print("Content-Length: " + body.length() + CRLF);
+//            printWriter.print("Accept: */*" + EOH);
+//            printWriter.flush();
+//            printWriter.print(body);
+//
+//            printWriter.close();
+//            bufferedReader.close();
+//            socket.close();
         }catch (UnknownHostException e){
             e.printStackTrace();
         }catch (IOException e){
             e.printStackTrace();
         }
-
-
 
 
     }

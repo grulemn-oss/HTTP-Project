@@ -11,13 +11,10 @@ public class HTTPClient {
     public static final String CRLF = "\r\n";
     public static final String EOH = CRLF + CRLF;
 	public static final Charset ENCODING = StandardCharsets.ISO_8859_1; // encoding to use for reading/writing data
-
     public static final int CHUNK_SIZE = 512;				// size of fragment to process
 
 
     public static void main(String[] args) {
-
-        System.out.println("client is requesting ... ");
         try {
             // Read user input
             String host = args[0];
@@ -36,7 +33,7 @@ public class HTTPClient {
 			// use while((N_bytes = reader.read(buffer, 0, CHUNK_SIZE)) != -1 ){} 
             // ------------OUTPUT-----------
             PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(dataOutputStream, StandardCharsets.ISO_8859_1));
-            printWriter.print("GET " + inputFile + " HTTP/1.1" + CRLF);
+            printWriter.print("GET /" + inputFile + " HTTP/1.1" + CRLF);
             printWriter.print("HOST: " + host + CRLF);
             printWriter.print("CONNECTION: close" + CRLF);
             printWriter.print("Accept: */*" + EOH);
