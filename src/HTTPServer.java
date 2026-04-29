@@ -13,7 +13,7 @@ public class HTTPServer {
     public static final String IP = "127.0.0.1";
     public static final String CRLF = "\r\n";
     public static final String EOH = CRLF + CRLF;
-	public static final Charset ENCODING = StandardCharsets.ISO_8859_1; // encoding to use for reading/writing
+    public static final Charset ENCODING = StandardCharsets.ISO_8859_1; // encoding to use for reading/writing
     public static final File ROOT_DIR = new File("resources/server_folder");
 
     public static void main(String[] args){
@@ -32,10 +32,10 @@ public class HTTPServer {
 
                 // ------------INPUT---------------
                 // read egg, shell by shell
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(dataInputStream));
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(dataInputStream, ENCODING));
                 String path = "";
                 String line = bufferedReader.readLine();
-                while(!line.isEmpty()) {
+                while(line != null && !line.isEmpty()) {
                     if (line.startsWith("GET ")) {
                         path = line.split(" ")[1];
                     }
@@ -55,26 +55,33 @@ public class HTTPServer {
                 // ------------OUTPUT---------------
                 // generate an egg
 
-                PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(dataOutputStream, StandardCharsets.ISO_8859_1));
+                PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(dataOutputStream, ENCODING));
 
                 if (file.exists() && !file.isDirectory()) {
-                    String body = new String(Files.readAllBytes(file.toPath()), ENCODING);
+                    byte[] fileBytes = Files.readAllBytes(file.toPath());
+
+                    // Determine Content-Type from extension so browsers render correctly
+                    String contentType = "text/html";
+                    if (path.endsWith(".png"))
+                        contentType = "image/png";
 
                     printWriter.print("HTTP/1.1 200 OK" + CRLF);
-                    printWriter.print("Content-Type: text/html" + CRLF);
-                    printWriter.print("Content-Length: " + body.length() + CRLF);
-                    printWriter.print("Accept: */*" + EOH);
-                    printWriter.print(body);
+                    printWriter.print("Content-Type: " + contentType + CRLF);
+                    printWriter.print("Content-Length: " + fileBytes.length + CRLF);
+                    printWriter.print("Connection: close" + EOH);
+                    printWriter.flush();
+                    dataOutputStream.write(fileBytes);
+                    dataOutputStream.flush();
                 } else {
-                    String errBod = "File does not exist 404\n";
+                    String errBody = "File does not exist 404\n";
                     printWriter.print("HTTP/1.1 404 Not Found" + CRLF);
                     printWriter.print("Content-Type: text/html" + CRLF);
-                    printWriter.print("Content-Length: " + errBod.length() + CRLF);
+                    printWriter.print("Content-Length: " + errBody.length() + CRLF);
                     printWriter.print("Connection: close" + EOH);
-                    printWriter.print(errBod);
+                    printWriter.print(errBody);
+                    printWriter.flush();
                     System.out.println("Error 404: The requested file '" + path + "' does not exist.");
                 }
-                printWriter.flush();
                 printWriter.close();
                 bufferedReader.close();
                 socket.close();
@@ -84,12 +91,5 @@ public class HTTPServer {
         }catch (IOException e){
             e.printStackTrace();
         }
-
-
     }
-
-
-
-
-
 }

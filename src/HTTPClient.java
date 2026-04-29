@@ -32,7 +32,7 @@ public class HTTPClient {
 			// HINT: If the content length is not given in the HTTP respond's header,
 			// use while((N_bytes = reader.read(buffer, 0, CHUNK_SIZE)) != -1 ){} 
             // ------------OUTPUT-----------
-            PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(dataOutputStream, StandardCharsets.ISO_8859_1));
+            PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(dataOutputStream, ENCODING));
 
             String reqPath;
             if (inputFile.startsWith("/")) {
@@ -51,10 +51,10 @@ public class HTTPClient {
             String line = bufferedReader.readLine();
             int length = 0;
             if (line.length() > 8 && line.startsWith("200", 9)) {
-                while(!line.isEmpty()) {
+                while(line != null && !line.isEmpty()) {
                     line = bufferedReader.readLine();
-                    if (line.length() > 15 && line.startsWith("Content-Length:")) {
-                        length = Integer.parseInt(line.substring(16));
+                    if (line != null && line.length() > 15 && line.startsWith("Content-Length:")) {
+                        length = Integer.parseInt(line.substring(16).trim());
                     }
                 }
 
@@ -78,9 +78,10 @@ public class HTTPClient {
                         bufferedWriter.write(buffer, 0, nBytes);
                     }
                 }
-
-                System.out.println("Saved File: " + safeReqPath);
                 bufferedWriter.flush();
+                bufferedWriter.close();
+                System.out.println("Saved File: " + safeReqPath);
+
             } else if (line.length() > 8) {
                 // PRINT ERROR
                 System.out.print("Error: ");
@@ -89,6 +90,8 @@ public class HTTPClient {
                     line = bufferedReader.readLine();
                 }
             }
+            bufferedReader.close();
+            socket.close();
 
         }catch (UnknownHostException e){
             e.printStackTrace();
@@ -96,5 +99,4 @@ public class HTTPClient {
             e.printStackTrace();
         }
     }
-
 }
