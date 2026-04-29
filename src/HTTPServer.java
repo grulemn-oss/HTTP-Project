@@ -17,15 +17,12 @@ public class HTTPServer {
     public static final File ROOT_DIR = new File("resources/server_folder");
 
     public static void main(String[] args){
-
-        System.out.println("server is listening to port 80");
         try {
             ServerSocket serverSocket = new ServerSocket(PORT);
 
             while(true){
 
                 Socket socket = serverSocket.accept();
-                System.out.println("get connection from IP: " + socket.getRemoteSocketAddress());
 
                 DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
                 DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
@@ -38,8 +35,9 @@ public class HTTPServer {
                 while(line != null && !line.isEmpty()) {
                     if (line.startsWith("GET ")) {
                         path = line.split(" ")[1];
+                        System.out.println("GET " + path + " request from " + socket.getRemoteSocketAddress());
                     }
-                    System.out.println(line);
+
                     line = bufferedReader.readLine();
                 }
 
@@ -70,6 +68,7 @@ public class HTTPServer {
                     printWriter.print("Content-Length: " + fileBytes.length + CRLF);
                     printWriter.print("Connection: close" + EOH);
                     printWriter.flush();
+                    System.out.println("Sending 200 OK to /"  + IP);
                     dataOutputStream.write(fileBytes);
                     dataOutputStream.flush();
                 } else {
@@ -80,7 +79,7 @@ public class HTTPServer {
                     printWriter.print("Connection: close" + EOH);
                     printWriter.print(errBody);
                     printWriter.flush();
-                    System.out.println("Error 404: The requested file '" + path + "' does not exist.");
+                    System.out.println("Sending 404 Not Found to " + socket.getRemoteSocketAddress());
                 }
                 printWriter.close();
                 bufferedReader.close();
