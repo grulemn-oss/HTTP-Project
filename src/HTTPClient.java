@@ -33,14 +33,21 @@ public class HTTPClient {
 			// use while((N_bytes = reader.read(buffer, 0, CHUNK_SIZE)) != -1 ){} 
             // ------------OUTPUT-----------
             PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(dataOutputStream, StandardCharsets.ISO_8859_1));
-            printWriter.print("GET /" + inputFile + " HTTP/1.1" + CRLF);
+
+            String reqPath;
+            if (inputFile.startsWith("/")) {
+                    reqPath = inputFile;
+            } else {
+                reqPath = "/" + inputFile;
+            }
+            printWriter.print("GET " + reqPath + " HTTP/1.1" + CRLF);
             printWriter.print("HOST: " + host + CRLF);
             printWriter.print("CONNECTION: close" + CRLF);
             printWriter.print("Accept: */*" + EOH);
             printWriter.flush();
 
             // ------------INPUT---------------
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(dataInputStream));
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(dataInputStream, ENCODING));
             String line = bufferedReader.readLine();
             int length = 0;
             if (line.length() > 8 && line.startsWith("200", 9)) {
@@ -52,11 +59,27 @@ public class HTTPClient {
                 }
 
                 // SAVE FILE
-                BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("./resources/client_folder/" + inputFile));
-                char[] buf = new char[length];
-                bufferedReader.read(buf, 0, length);
-                bufferedWriter.write(new String(buf));
-                System.out.println("Saved File: " + inputFile);
+                String safeReqPath = inputFile;
+                if (inputFile.contains("/")) {
+                    safeReqPath = inputFile.substring(inputFile.lastIndexOf("/") + 1);
+                }
+                BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("./resources/client_folder/" + safeReqPath, ENCODING));
+
+                if (length > 0) {
+                    // len known
+                    char[] buf = new char[length];
+                    bufferedReader.read(buf, 0, length);
+                    bufferedWriter.write(new String(buf));
+                } else {
+                    // len unknown, alw stream
+                    char[] buffer = new char[CHUNK_SIZE];
+                    int nBytes;
+                    while ((nBytes = bufferedReader.read(buffer, 0, CHUNK_SIZE)) != -1) {
+                        bufferedWriter.write(buffer, 0, nBytes);
+                    }
+                }
+
+                System.out.println("Saved File: " + safeReqPath);
                 bufferedWriter.flush();
             } else if (line.length() > 8) {
                 // PRINT ERROR
